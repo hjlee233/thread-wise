@@ -47,7 +47,7 @@ export const defaultAdapter: PageAdapter = {
     }
 
     const container = findBodyContainer(document);
-    let body = container ? cleanText(container) : "";
+    let body = container ? extractReadableText(container) : "";
     let extractionMethod: ExtractionMethod = "default";
 
     if (body.length < MIN_BODY_LENGTH) {
@@ -136,8 +136,9 @@ function rawTextLength(element: Element): number {
  * 요소에서 노이즈를 제거하고 본문 텍스트를 정규화해 반환한다.
  * 분리된 노드에서 innerText 가 비는 문제를 피하려고 clone + textContent 를 사용하고,
  * 블록 요소 단위로 줄바꿈을 보존한다.
+ * 다른 어댑터(예: ruliweb DOM fallback)에서도 재사용한다.
  */
-function cleanText(element: Element): string {
+export function extractReadableText(element: Element): string {
   const clone = element.cloneNode(true) as Element;
   clone.querySelectorAll(NOISE_SELECTORS.join(",")).forEach((n) => n.remove());
 
@@ -158,6 +159,11 @@ function cleanText(element: Element): string {
     }
   }
 
+  return normalizeWhitespace(text);
+}
+
+/** 줄바꿈은 보존하면서 공백을 정규화한다. 문자열 본문(예: JSON-LD)에도 재사용. */
+export function normalizeWhitespace(text: string): string {
   return text
     .replace(/\r/g, "")
     .replace(/[^\S\n]+/g, " ")

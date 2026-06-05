@@ -4,20 +4,35 @@
 
 관련 문서: [PRD](../docs/PRD.md) · [아키텍처](../docs/ARCHITECTURE.md) · [MVP 1 계획](../docs/MVP_1_PLAN.md)
 
-## 현재 상태: M3 (골격)
+## 현재 상태: M4.5 (컨텍스트 추출 + 루리웹 어댑터)
 
 이 단계에서 구현된 것:
 
 - Manifest V3 + Vite + React + TypeScript 빌드
-- Side Panel UI 골격
-- Background Service Worker (툴바 클릭 시 Side Panel 열기, PING/PONG 연결 확인)
-- Content Script 엔트리 (로드 로그)
-- Side Panel ↔ Background 메시지 통신
+- Side Panel UI (현재 글 가져오기 + 컨텍스트 미리보기)
+- Background Service Worker (Side Panel 열기, 활성 탭 컨텍스트 추출 중계)
+- Content Script + PageAdapter 기반 추출
+  - `defaultAdapter`: article/main/role=main/긴 블록 우선순위, 노이즈 제거
+  - `ruliwebAdapter`: 루리웹 게시글 JSON-LD(DiscussionForumPosting.articleBody) 1순위 추출
+- Side Panel ↔ Background ↔ Content Script 메시지 통신
+- **이 단계까지는 서버로 원문을 전송하지 않는다.**
 
 다음 단계:
 
-- **M4**: 현재 탭 컨텍스트 추출(제목/본문/선택 텍스트) → Side Panel 표시
 - **M5**: 백엔드 `/api/analyze`·`/api/ask` 연결 (요약/질문)
+
+### 사이트 어댑터
+
+`src/content/adapters/` 에서 사이트별 추출 전략을 관리한다. `adapterRegistry` 가
+URL 에 맞는 어댑터를 고르고, 항상 `defaultAdapter` 로 fallback 한다.
+
+| 어댑터 | 매칭 | 본문 추출 1순위 |
+| --- | --- | --- |
+| `ruliwebAdapter` | `bbs.ruliweb.com/community/board/*/read/*` | JSON-LD `DiscussionForumPosting.articleBody` → DOM fallback |
+| `defaultAdapter` | 그 외 모든 페이지 | `article`→`main`→`[role=main]`→가장 긴 텍스트 블록 |
+
+> 댓글은 1차 MVP 범위 밖이라 본문에 포함하지 않는다. 루리웹 댓글 선택자 메모는
+> [ruliwebAdapter.ts](src/content/adapters/ruliwebAdapter.ts) 상단 주석에 보존되어 있다(후속 확장용).
 
 ## 요구 사항
 
@@ -70,7 +85,12 @@ extension/
     background/
       serviceWorker.ts  # Side Panel 열기, PING/PONG (M4·M5 에서 라우팅/API 중계 확장)
     content/
-      index.ts          # 컨텍스트 추출 진입점 (M4 에서 구현)
+      index.ts          # 추출 요청 수신 핸들러
+      adapters/
+        types.ts            # PageAdapter 인터페이스
+        defaultAdapter.ts   # 범용 추출 + 재사용 텍스트 헬퍼
+        ruliwebAdapter.ts   # 루리웹 JSON-LD 추출
+        adapterRegistry.ts  # URL 기반 어댑터 선택
     sidepanel/
       index.html
       main.tsx

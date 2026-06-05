@@ -1,14 +1,16 @@
 import type { ExtractedPageContext } from "../../shared/types.js";
 import { defaultAdapter } from "./defaultAdapter.js";
+import { ruliwebAdapter } from "./ruliwebAdapter.js";
 import type { PageAdapter } from "./types.js";
 
 /**
  * 사이트별 어댑터 레지스트리.
- * 1차 MVP 에서는 defaultAdapter 만 등록한다.
- * 사이트별 어댑터는 defaultAdapter 보다 앞에 두고, matches() 로 우선 선택되게 한다.
+ * 사이트별 어댑터를 defaultAdapter 보다 앞에 두고, matches() 로 우선 선택되게 한다.
+ * defaultAdapter 는 항상 마지막 fallback 이다.
  */
 const adapters: PageAdapter[] = [
-  // 예: ruliwebAdapter, dcinsideAdapter ... (2차 이후)
+  ruliwebAdapter,
+  // 예: dcinsideAdapter, clienAdapter ... (후속)
   defaultAdapter,
 ];
 
