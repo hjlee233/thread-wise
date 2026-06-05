@@ -4,22 +4,32 @@
 
 관련 문서: [PRD](../docs/PRD.md) · [아키텍처](../docs/ARCHITECTURE.md) · [MVP 1 계획](../docs/MVP_1_PLAN.md)
 
-## 현재 상태: M4.5 (컨텍스트 추출 + 루리웹 어댑터)
+## 현재 상태: M5 (요약/질문 End-to-End) — 1차 MVP 완성
 
-이 단계에서 구현된 것:
+구현된 것:
 
 - Manifest V3 + Vite + React + TypeScript 빌드
-- Side Panel UI (현재 글 가져오기 + 컨텍스트 미리보기)
-- Background Service Worker (Side Panel 열기, 활성 탭 컨텍스트 추출 중계)
-- Content Script + PageAdapter 기반 추출
-  - `defaultAdapter`: article/main/role=main/긴 블록 우선순위, 노이즈 제거
-  - `ruliwebAdapter`: 루리웹 게시글 JSON-LD(DiscussionForumPosting.articleBody) 1순위 추출
-- Side Panel ↔ Background ↔ Content Script 메시지 통신
-- **이 단계까지는 서버로 원문을 전송하지 않는다.**
+- Side Panel UI
+  - **현재 글 가져오기** → 컨텍스트 미리보기(제목/URL/본문/선택 텍스트/경고)
+  - **요약하기** → 요약·핵심·미확인·추천질문·주의 표시
+  - **질문하기** → 답변·근거·외부확인 배지·주의 표시
+- Background Service Worker
+  - Side Panel 열기, 활성 탭 컨텍스트 추출 중계
+  - **API client**: `/api/analyze`·`/api/ask` 호출 중계 (Side Panel 은 서버를 직접 호출하지 않음)
+- Content Script + PageAdapter 기반 추출 (`defaultAdapter`, `ruliwebAdapter`)
+- 오류 처리: 서버 미실행(NETWORK) / 타임아웃 / rate limit / 요청 크기 초과 / 서버 ErrorResponse
+
+> 원문은 **사용자가 버튼을 누를 때만** 서버로 전송된다. 추출(현재 글 가져오기) 단계에서는 전송하지 않는다.
 
 다음 단계:
 
-- **M5**: 백엔드 `/api/analyze`·`/api/ask` 연결 (요약/질문)
+- **2차 MVP**: 사실 검증(`/api/fact-check` + Web Search Tool)
+
+### 서버 연결
+
+- 기본 서버 주소: `http://localhost:3000` ([constants.ts](src/shared/constants.ts) `DEFAULT_SERVER_BASE_URL`)
+- 요약/질문을 쓰려면 [server](../server/) 가 실행 중이어야 한다 (`cd server && npm run dev`).
+- OpenAI API Key 는 **서버 `.env`** 에만 둔다. Extension 번들에는 포함되지 않는다.
 
 ### 사이트 어댑터
 
@@ -67,13 +77,17 @@ npm run typecheck
 5. `extension/dist` 폴더 선택
 6. 툴바의 Thread Wise 아이콘 클릭 → Side Panel 이 열린다
 
-## 동작 확인 (M3 완료 기준)
+## 동작 확인 (1차 MVP 완료 기준)
+
+서버를 먼저 실행한다 (`cd ../server && npm run dev`).
 
 - [ ] `chrome://extensions` 에서 오류 없이 로드된다
 - [ ] 툴바 아이콘 클릭 시 Side Panel 이 열린다
-- [ ] Side Panel 에 기본 UI(제목, 카드)가 표시된다
-- [ ] **Background 연결 확인** 버튼 클릭 → `✓ Background 연결됨 · v0.1.0` 표시
-  - 이것으로 Side Panel ↔ Background 메시지 통신을 확인한다
+- [ ] 게시글 페이지에서 **현재 글 가져오기** → 제목/본문 미리보기 표시
+- [ ] 본문 일부를 드래그 후 다시 가져오면 **선택 텍스트** 표시
+- [ ] **요약하기** → 요약/핵심/추천질문 표시
+- [ ] **질문하기** → 답변/근거 표시
+- [ ] 서버를 끈 채 요약 시도 → `서버에 연결할 수 없습니다 … (NETWORK)` 오류 표시
 
 ## 구조
 
@@ -83,7 +97,9 @@ extension/
   vite.config.ts       # Vite + React + crxjs
   src/
     background/
-      serviceWorker.ts  # Side Panel 열기, PING/PONG (M4·M5 에서 라우팅/API 중계 확장)
+      serviceWorker.ts  # Side Panel 열기, 메시지 라우팅(추출/요약/질문)
+      tabContext.ts     # 활성 탭 조회 + content script 추출 중계
+      apiClient.ts      # 서버 /api/analyze·/api/ask 호출
     content/
       index.ts          # 추출 요청 수신 핸들러
       adapters/
@@ -94,7 +110,10 @@ extension/
     sidepanel/
       index.html
       main.tsx
-      App.tsx           # 읽기 화면 골격 + 연결 확인
+      App.tsx           # 읽기/요약/질문 화면
+      components/
+        ContextPreview.tsx  # 추출 컨텍스트 미리보기
+        ResultPanel.tsx     # 요약/답변 결과 표시
       styles.css
     shared/
       messages.ts       # 메시지 계약 + sendToBackground

@@ -12,7 +12,7 @@ function main(): void {
   }
 
   const app = createApp();
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(
       JSON.stringify({
         level: "info",
@@ -22,6 +22,16 @@ function main(): void {
         model: config.openaiModel,
       })
     );
+  });
+
+  // listen 실패(포트 충돌 등)를 명확한 메시지로 처리한다.
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`포트 ${config.port} 가 이미 사용 중입니다. PORT 환경변수로 다른 포트를 지정하세요.`);
+    } else {
+      console.error(`서버 기동 실패: ${err.message}`);
+    }
+    process.exit(1);
   });
 }
 
