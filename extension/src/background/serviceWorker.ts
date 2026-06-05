@@ -1,16 +1,15 @@
 /**
  * Background Service Worker.
  *
- * M3 책임(골격):
- * - 툴바 아이콘 클릭 시 Side Panel 이 열리도록 동작 설정
- * - Side Panel 의 PING 에 PONG 으로 응답(연결성 확인)
- *
- * 이후 단계:
- * - M4: 현재 탭 조회 + Content Script 컨텍스트 추출 라우팅
- * - M5: 백엔드 API 호출 중계
- * Background 는 DOM 을 직접 읽지 않는다(ARCHITECTURE 3.3).
+ * 책임(ARCHITECTURE 3.3):
+ * - 툴바 아이콘 클릭 시 Side Panel 열기
+ * - PING/PONG 연결 확인
+ * - 현재 탭 컨텍스트 추출 라우팅 (Content Script 경유)
+ * - 백엔드 API 호출 중계 (/api/analyze, /api/ask)
+ * Background 는 DOM 을 직접 읽지 않는다.
  */
 
+import { analyze, ask } from "./apiClient.js";
 import {
   MessageType,
   type PongMessage,
@@ -42,8 +41,15 @@ chrome.runtime.onMessage.addListener(
         extractFromActiveTab().then(sendResponse);
         return true;
       }
+      case MessageType.ANALYZE_REQUEST: {
+        analyze(message.payload).then(sendResponse);
+        return true;
+      }
+      case MessageType.ASK_REQUEST: {
+        ask(message.payload).then(sendResponse);
+        return true;
+      }
       default:
-        // 아직 구현되지 않은 메시지는 무시한다(M5 에서 처리).
         return false;
     }
   }
