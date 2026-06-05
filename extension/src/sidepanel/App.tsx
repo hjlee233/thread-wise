@@ -1,32 +1,37 @@
 import { useState } from "react";
 import { MessageType, sendToBackground } from "../shared/messages.js";
-import type { PongMessage } from "../shared/messages.js";
+import type { ContextExtractResult } from "../shared/messages.js";
+import type { ExtractedPageContext } from "../shared/types.js";
+import { ContextPreview } from "./components/ContextPreview.js";
 
-type ConnStatus =
+type ExtractState =
   | { kind: "idle" }
-  | { kind: "checking" }
-  | { kind: "ok"; message: string }
+  | { kind: "loading" }
+  | { kind: "ready"; context: ExtractedPageContext }
   | { kind: "error"; message: string };
 
 export function App() {
-  const [conn, setConn] = useState<ConnStatus>({ kind: "idle" });
+  const [extract, setExtract] = useState<ExtractState>({ kind: "idle" });
 
-  async function checkConnection() {
-    setConn({ kind: "checking" });
+  async function fetchCurrentPost() {
+    setExtract({ kind: "loading" });
     try {
-      const res = await sendToBackground<PongMessage>({ type: MessageType.PING });
-      if (res?.type === MessageType.PONG) {
-        setConn({
-          kind: "ok",
-          message: `Background 연결됨 · v${res.extensionVersion}`,
-        });
+      const res = await sendToBackground<ContextExtractResult>({
+        type: MessageType.CONTEXT_EXTRACT_REQUEST,
+      });
+
+      if (res?.type === MessageType.CONTEXT_EXTRACT_RESULT && res.context) {
+        setExtract({ kind: "ready", context: res.context });
       } else {
-        setConn({ kind: "error", message: "예상치 못한 응답을 받았습니다." });
+        setExtract({
+          kind: "error",
+          message: res?.error ?? "페이지 내용을 가져오지 못했습니다.",
+        });
       }
     } catch (err) {
-      setConn({
+      setExtract({
         kind: "error",
-        message: `Background 연결 실패: ${err instanceof Error ? err.message : String(err)}`,
+        message: `요청 실패: ${err instanceof Error ? err.message : String(err)}`,
       });
     }
   }
@@ -35,31 +40,36 @@ export function App() {
     <div className="tw-app">
       <header className="tw-header">
         <h1>Thread Wise</h1>
-        <p>게시글을 함께 읽는 AI 보조 도구 · 1차 MVP 골격</p>
+        <p>게시글을 함께 읽는 AI 보조 도구 · 1차 MVP</p>
       </header>
 
       <section className="tw-card">
-        <h2>연결 확인</h2>
+        <h2>읽기</h2>
         <button
           className="tw-button"
-          onClick={checkConnection}
-          disabled={conn.kind === "checking"}
+          onClick={fetchCurrentPost}
+          disabled={extract.kind === "loading"}
         >
-          {conn.kind === "checking" ? "확인 중…" : "Background 연결 확인"}
+          {extract.kind === "loading" ? "가져오는 중…" : "현재 글 가져오기"}
         </button>
-        {conn.kind === "ok" && (
-          <p className="tw-status is-ok">✓ {conn.message}</p>
+
+        {extract.kind === "error" && (
+          <p className="tw-status is-error">✕ {extract.message}</p>
         )}
-        {conn.kind === "error" && (
-          <p className="tw-status is-error">✕ {conn.message}</p>
+
+        {extract.kind === "ready" && <ContextPreview context={extract.context} />}
+
+        {extract.kind === "idle" && (
+          <p className="tw-muted">
+            게시글 페이지에서 버튼을 누르면 제목과 본문을 추출해 여기에 표시합니다.
+            이 단계에서는 서버로 아무것도 전송하지 않습니다.
+          </p>
         )}
       </section>
 
       <section className="tw-card">
-        <h2>읽기</h2>
-        <p className="tw-muted">
-          현재 글 가져오기 · 요약 · 질문 기능은 다음 단계(M4·M5)에서 연결됩니다.
-        </p>
+        <h2>요약 · 질문</h2>
+        <p className="tw-muted">요약/질문 기능은 다음 단계(M5)에서 서버와 연결됩니다.</p>
       </section>
     </div>
   );

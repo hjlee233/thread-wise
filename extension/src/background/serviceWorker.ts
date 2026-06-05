@@ -16,6 +16,7 @@ import {
   type PongMessage,
   type RuntimeRequest,
 } from "../shared/messages.js";
+import { extractFromActiveTab } from "./tabContext.js";
 
 // 툴바 아이콘 클릭으로 Side Panel 을 연다.
 chrome.runtime.onInstalled.addListener(() => {
@@ -36,8 +37,13 @@ chrome.runtime.onMessage.addListener(
         sendResponse(pong);
         return false; // 동기 응답 완료
       }
+      case MessageType.CONTEXT_EXTRACT_REQUEST: {
+        // 활성 탭 조회 + content script 통신은 비동기이므로 채널을 열어둔다.
+        extractFromActiveTab().then(sendResponse);
+        return true;
+      }
       default:
-        // 아직 구현되지 않은 메시지는 무시한다(M4/M5 에서 처리).
+        // 아직 구현되지 않은 메시지는 무시한다(M5 에서 처리).
         return false;
     }
   }
