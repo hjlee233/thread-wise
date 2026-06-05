@@ -31,6 +31,26 @@ export interface HealthResponse {
   version: string;
 }
 
+/**
+ * 하이브리드 AI 확장 타입 (docs/HYBRID_AI_PLAN.md).
+ * 1차에서는 요약(/api/analyze)에만 적용한다. 모두 optional 이라 기존 요청과 호환된다.
+ */
+export type AnalyzeQualityMode = "local" | "boost";
+
+export interface BoostSettings {
+  preset?: "fast" | "balanced" | "high_quality" | "custom";
+  model?: string;
+  tokenBudget?: "low" | "normal" | "high";
+  reasoningEffort?: "low" | "medium" | "high";
+}
+
+/** 실제 사용한 provider 정보(응답 meta). H2/H3 에서 채운다. */
+export interface AnalyzeResponseMeta {
+  provider: "local" | "openai";
+  model: string;
+  analyzeQualityMode?: AnalyzeQualityMode;
+}
+
 /** POST /api/analyze 요청 */
 export interface AnalyzeRequest {
   pageUrl: string;
@@ -38,6 +58,10 @@ export interface AnalyzeRequest {
   title?: string;
   body: string;
   selectedText?: string;
+  /** 하이브리드: 요약 provider 선택. 없으면 서버 기본값(DEFAULT_ANALYZE_QUALITY_MODE). */
+  analyzeQualityMode?: AnalyzeQualityMode;
+  /** 하이브리드: 부스트 세부 설정. analyzeQualityMode="boost" 일 때 의미가 있다. */
+  boostSettings?: BoostSettings;
 }
 
 /** POST /api/analyze 응답 (Structured Output) */
@@ -48,6 +72,8 @@ export interface AnalyzeResponse {
   recommendedQuestions: string[];
   caution: string;
   warnings: string[];
+  /** 실제 사용 provider 정보. 1차 호환을 위해 optional. */
+  meta?: AnalyzeResponseMeta;
 }
 
 /** POST /api/ask 요청 */

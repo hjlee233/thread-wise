@@ -11,7 +11,7 @@ AI에게 **요약**시키고 **질문**할 수 있는 Chrome Extension(Manifest 
 | --- | --- |
 | [`server/`](server/) | Node.js + Express 백엔드. OpenAI 호출, 요약/질문 API. **API Key 는 여기에만 보관.** |
 | [`extension/`](extension/) | Manifest V3 Chrome Extension. Side Panel UI, 본문 추출, 서버 호출. |
-| [`docs/`](docs/) | 기획·설계 문서 (PRD, API_SPEC, ARCHITECTURE, MVP_1_PLAN). |
+| [`docs/`](docs/) | 기획·설계 문서 (PRD, API_SPEC, ARCHITECTURE, MVP_1_PLAN, HYBRID_AI_PLAN). |
 
 ## 현재 상태: 1차 MVP 완성
 
@@ -69,3 +69,4 @@ npm run build                # extension/dist 생성
 - 서버 상세: [server/README.md](server/README.md)
 - 확장 상세: [extension/README.md](extension/README.md)
 - API 계약: [docs/API_SPEC.md](docs/API_SPEC.md) · 아키텍처: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- 하이브리드 AI 계획: [docs/HYBRID_AI_PLAN.md](docs/HYBRID_AI_PLAN.md)

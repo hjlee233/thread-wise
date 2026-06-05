@@ -6,7 +6,13 @@
  * - ANALYZE_REQUEST / ASK_REQUEST: 서버 요약/질문 (M5)
  */
 
-import type { AnalyzeResponse, AskResponse, ExtractedPageContext } from "./types.js";
+import type {
+  AnalyzeQualityMode,
+  AnalyzeResponse,
+  AskResponse,
+  BoostSettings,
+  ExtractedPageContext,
+} from "./types.js";
 
 export const MessageType = {
   /** Side Panel -> Background 연결 확인 */
@@ -58,6 +64,9 @@ export interface AnalyzeRequestPayload {
   title?: string;
   body: string;
   selectedText?: string;
+  /** 하이브리드(H4 에서 연동). 없으면 서버 기본값 사용. */
+  analyzeQualityMode?: AnalyzeQualityMode;
+  boostSettings?: BoostSettings;
 }
 
 /** /api/ask 요청 페이로드. */

@@ -330,3 +330,40 @@ POST /api/moderate
 ```
 
 1차 MVP 구현 중 위 엔드포인트의 파일이나 UI를 미리 만들지 않는다. 단, 타입과 서비스 구조는 후속 확장이 가능하도록 경계를 둔다.
+
+## 10. 하이브리드 AI 확장 필드 (선택적)
+
+토큰 비용 절감을 위한 로컬/부스트 라우팅을 대비해 `/api/analyze` 요청/응답에 **선택적** 필드를 둔다. 상세 설계는 [HYBRID_AI_PLAN.md](HYBRID_AI_PLAN.md) 참고. 1차 하이브리드에서는 **요약(`/api/analyze`)에만** 적용하며, `/api/ask` 에는 적용하지 않는다.
+
+모든 필드는 optional 이라 이 필드들을 보내지 않는 기존 클라이언트는 그대로 동작한다.
+
+### 10.1 `/api/analyze` 요청 확장
+
+```text
+analyzeQualityMode: "local" | "boost" (선택)
+  - 없으면 서버 DEFAULT_ANALYZE_QUALITY_MODE 사용
+  - 품질 게이트 통과 전 서버 기본값은 openai 동작 유지
+boostSettings: (선택, analyzeQualityMode="boost" 일 때 의미)
+  preset: "fast" | "balanced" | "high_quality" | "custom"
+  model: 문자열 (서버 allowlist 밖이면 거부)
+  tokenBudget: "low" | "normal" | "high"
+  reasoningEffort: "low" | "medium" | "high"
+```
+
+### 10.2 `/api/analyze` 응답 확장
+
+```text
+meta: (선택) 실제 사용 provider 정보
+  provider: "local" | "openai"
+  model: 사용 모델 alias 또는 id
+  analyzeQualityMode: "local" | "boost"
+```
+
+`meta` 는 1차 UI 호환을 위해 optional 이며, provider 라우팅(H2/H3) 구현 후 채워진다.
+
+### 10.3 후속 에러 코드 (하이브리드)
+
+```text
+LOCAL_AI_DISABLED, LOCAL_AI_UNAVAILABLE, LOCAL_AI_TIMEOUT, LOCAL_AI_ERROR,
+LOCAL_STRUCTURED_OUTPUT_ERROR, UNSUPPORTED_MODEL, INVALID_BOOST_SETTINGS
+```

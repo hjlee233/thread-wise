@@ -31,7 +31,7 @@ cp .env.example .env
 | `PORT` | 서버 포트 | `3000` |
 | `NODE_ENV` | 실행 환경 | `development` |
 | `MAX_BODY_CHARS` | 게시글 본문 최대 길이(문자). 초과분은 잘라내고 경고 | `12000` |
-| `CORS_ALLOWED_ORIGINS` | 허용 Origin(콤마 구분). 비우면 모두 허용 | (비어 있음) |
+| `CORS_ALLOWED_ORIGINS` | 허용 Origin(콤마 구분). development 에서는 비우면 모두 허용, production 에서는 필수 | (비어 있음) |
 
 ## 실행
 

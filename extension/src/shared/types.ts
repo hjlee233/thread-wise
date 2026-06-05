@@ -18,6 +18,37 @@ export interface ExtractedPageContext {
   extractionWarnings: string[];
 }
 
+/**
+ * 하이브리드 AI 설정 (docs/HYBRID_AI_PLAN.md). 1차에서는 요약에만 적용.
+ * 실제 UI 연동은 H4 에서 한다. H1 에서는 타입/기본값만 둔다.
+ */
+export type AnalyzeQualityMode = "local" | "boost";
+export type BoostPreset = "fast" | "balanced" | "high_quality" | "custom";
+export type TokenBudget = "low" | "normal" | "high";
+export type ReasoningEffort = "low" | "medium" | "high";
+
+export interface BoostSettings {
+  preset?: BoostPreset;
+  model?: string;
+  tokenBudget?: TokenBudget;
+  reasoningEffort?: ReasoningEffort;
+}
+
+export interface HybridSettings {
+  analyzeQualityMode: AnalyzeQualityMode;
+  boostPreset: BoostPreset;
+  boostModel?: string;
+  tokenBudget: TokenBudget;
+  reasoningEffort: ReasoningEffort;
+}
+
+/** 응답 meta (실제 사용 provider). optional. */
+export interface AnalyzeResponseMeta {
+  provider: "local" | "openai";
+  model: string;
+  analyzeQualityMode?: AnalyzeQualityMode;
+}
+
 /** 서버 /api/analyze 응답 (API_SPEC 6장). */
 export interface AnalyzeResponse {
   summary: string;
@@ -26,6 +57,7 @@ export interface AnalyzeResponse {
   recommendedQuestions: string[];
   caution: string;
   warnings: string[];
+  meta?: AnalyzeResponseMeta;
 }
 
 /** 서버 /api/ask 응답 (API_SPEC 7장). */
