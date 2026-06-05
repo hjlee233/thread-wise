@@ -46,8 +46,19 @@ export function loadConfig(): AppConfig {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
+  const nodeEnv = process.env.NODE_ENV ?? "development";
+
+  // Production CORS guard: 운영 환경에서 allowlist 가 비어 있으면
+  // 모든 origin 을 허용하는 위험한 상태가 되므로 기동을 거부한다.
+  if (nodeEnv === "production" && corsAllowedOrigins.length === 0) {
+    throw new Error(
+      "production 환경에서는 CORS_ALLOWED_ORIGINS 를 반드시 설정해야 합니다. " +
+        "예: chrome-extension://<확장 ID> (콤마로 여러 개 구분)."
+    );
+  }
+
   cached = {
-    nodeEnv: process.env.NODE_ENV ?? "development",
+    nodeEnv,
     port: optionalInt("PORT", 3000),
     openaiApiKey: requireEnv("OPENAI_API_KEY"),
     openaiModel: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",

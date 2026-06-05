@@ -1,0 +1,80 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+.tw-app {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.tw-header h1 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.tw-header p {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.tw-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.tw-card h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.tw-button {
+  appearance: none;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tw-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tw-status {
+  margin-top: 8px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tw-status.is-ok {
+  color: #15803d;
+}
+
+.tw-status.is-error {
+  color: #b91c1c;
+}
+
+.tw-muted {
+  color: #9ca3af;
+  font-size: 12px;
+}
